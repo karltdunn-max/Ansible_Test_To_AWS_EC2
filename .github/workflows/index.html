@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DevOps Control Dashboard</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Consolas, monospace;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+    .panel {
+      width: 50%;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      padding: 15px;
+      border-radius: 6px;
+    }
+    button {
+      background: #444;
+      color: #fff;
+      padding: 10px 15px;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #555;
+    }
+    pre {
+      background: #000;
+      padding: 10px;
+      height: 400px;
+      overflow-y: auto;
+      border-radius: 4px;
+      border: 1px solid #333;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<h1>DevOps Control Dashboard</h1>
+
+<div class="container">
+
+  <div class="panel">
+    <h2>Hadoop VM — Ansible Control</h2>
+    <button onclick="runHadoop()">Run Ansible Script</button>
+    <button onclick="clearOutput()">Clear Logs</button>
+    <button onclick="killNginx()" style="background: #c0392b;">Kill Nginx (Test Status)</button>
+    <pre id="hadoop_output">Waiting...</pre>
+  </div>
+
+  <div class="panel">
+    <h2>EC2 — NGINX Status</h2>
+    <button onclick="refreshEC2()" style="background: #2980b9;">Check Nginx Status</button>
+    <pre id="ec2_output">Click button to check status...</pre>
+  </div>
+
+</div>
+
+<script>
+const VM_IP = "192.168.254.179";
+
+function runHadoop() {
+  document.getElementById("hadoop_output").textContent = "Running Ansible Playbook...";
+  fetch(`http://${VM_IP}:5000/run?cmd=hadoop_ansible`)
+    .then(r => r.text()) // Using .text() as JSON was removed
+    .then(t => {
+      document.getElementById("hadoop_output").textContent = t;
+    })
+    .catch(e => document.getElementById("hadoop_output").textContent = "Error: " + e);
+}
+
+function refreshEC2() {
+  document.getElementById("ec2_output").textContent = "Checking EC2 status...";
+  fetch(`http://${VM_IP}:5000/run?cmd=nginx_status`)
+    .then(r => r.text()) // Using .text() as JSON was removed
+    .then(t => {
+      document.getElementById("ec2_output").textContent = t;
+    })
+    .catch(e => {
+      document.getElementById("ec2_output").textContent = "Connection Error: " + e;
+    });
+}
+
+function killNginx() {
+  if(confirm("Stop Nginx on remote EC2?")) {
+    fetch(`http://${VM_IP}:5000/test/kill-nginx`)
+      .then(r => r.text())
+      .then(t => {
+        alert(t);
+        // We don't call refreshEC2() here automatically anymore to keep it manual
+      })
+      .catch(e => alert("Error: " + e));
+  }
+}
+
+function clearOutput() {
+  document.getElementById("hadoop_output").textContent = "Waiting...";
+  document.getElementById("ec2_output").textContent = "Logs cleared.";
+}
+
+// Auto-refresh is fully disabled (commented out)
+// setInterval(refreshEC2, 10000);
+</script>
+
+</body>
+</html>
