@@ -51,11 +51,11 @@
 <div class="container">
 
   <div class="panel">
-    <h2>Hadoop VM — Ansible Control</h2>
-    <button onclick="runHadoop()">Run Ansible Script</button>
+    <h2>Master-Node — Nginx Management</h2>
+    <button onclick="runAnsibleRestart()">Restart Nginx</button>
     <button onclick="clearOutput()">Clear Logs</button>
     <button onclick="killNginx()" style="background: #c0392b;">Kill Nginx (Test Status)</button>
-    <pre id="hadoop_output">Waiting...</pre>
+    <pre id="ansible_output">Waiting...</pre>
   </div>
 
   <div class="panel">
@@ -67,29 +67,19 @@
 </div>
 
 <script>
-const VM_IP = "192.168.254.179";
+const VM_IP = "98.88.23.115";
 
-function runHadoop() {
-  document.getElementById("hadoop_output").textContent = "Running Ansible Playbook...";
-  fetch(`http://${VM_IP}:5000/run?cmd=hadoop_ansible`)
+function runAnsibleRestart() {
+  document.getElementById("ansible_output").textContent = "Running Ansible Playbook...";
+  fetch(`http://${VM_IP}:5000/run?cmd=ec2-user_ansible`)
     .then(r => r.text()) // Using .text() as JSON was removed
     .then(t => {
-      document.getElementById("hadoop_output").textContent = t;
+      document.getElementById("ansible_output").textContent = t;
     })
-    .catch(e => document.getElementById("hadoop_output").textContent = "Error: " + e);
+    .catch(e => document.getElementById("ansible_output").textContent = "Error: " + e);
 }
 
-function refreshEC2() {
-  document.getElementById("ec2_output").textContent = "Checking EC2 status...";
-  fetch(`http://${VM_IP}:5000/run?cmd=nginx_status`)
-    .then(r => r.text()) // Using .text() as JSON was removed
-    .then(t => {
-      document.getElementById("ec2_output").textContent = t;
-    })
-    .catch(e => {
-      document.getElementById("ec2_output").textContent = "Connection Error: " + e;
-    });
-}
+
 
 function killNginx() {
   if(confirm("Stop Nginx on remote EC2?")) {
@@ -104,9 +94,22 @@ function killNginx() {
 }
 
 function clearOutput() {
-  document.getElementById("hadoop_output").textContent = "Waiting...";
+  document.getElementById("ansible_output").textContent = "Waiting...";
   document.getElementById("ec2_output").textContent = "Logs cleared.";
 }
+
+function refreshEC2() {
+  document.getElementById("ec2_output").textContent = "Checking Nginx Status...";
+  // This calls the 'nginx_status' logic in your app.py
+  fetch(`http://${VM_IP}:5000/run?cmd=nginx_status`)
+    .then(r => r.text())
+    .then(t => {
+      document.getElementById("ec2_output").textContent = t;
+    })
+    .catch(e => document.getElementById("ec2_output").textContent = "Error: " + e);
+}
+
+
 
 // Auto-refresh is fully disabled (commented out)
 // setInterval(refreshEC2, 10000);
